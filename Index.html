@@ -121,12 +121,31 @@
 <body>
   <div class="sidebar">
     <h1>Rooms</h1>
+    <button onclick="showRoom('home','detail')">HOME</button>
     <button onclick="showRoom('kitchen')">Kitchen</button>
     <button onclick="showRoom('hall')">Hall</button>
     <button onclick="showRoom('bathroom')">Bathroom</button>
     <button onclick="showRoom('bedroom')">Bedroom</button>
   </div>
   <div class="main-content">
+
+    <div id="home" class="container" style="display: none;">
+      <h2>Home</h2>
+      <button onclick="toggleDevice('bedroomLight')">Bedroom Light</button>
+      <button onclick="toggleDevice('bathroomLight')">Bathroom Light</button>
+      <button onclick="toggleDevice('hallLight')">Hall Light</button>
+      <button onclick="toggleDevice('kitchenLight')">Kitchen Light</button>
+      <button onclick="toggleDevice('tv')">TV</button>
+      <button onclick="toggleDevice('bedroomSwitch')">Bedroom Switch</button>
+      <button onclick="toggleDevice('exhaustFan')">Exhaust Fan</button><br><br>
+	</div>
+
+      <div id = "detail">
+      <p>Scan for More Detail</p>
+      <img src="https://raw.githubusercontent.com/Vipulraj0152/SmartHome/main/QR_Repo.png" width="150" height="150">
+      <p>Vipul Raj : 1NH22CD139<br>Harsh Kumar : 1NH22CD034</p>
+      </div>
+
     <div id="kitchen" class="container">
       <h2>Kitchen</h2>
       <button onclick="toggleDevice('kitchenLight')">Toggle Light</button>
@@ -148,20 +167,16 @@
     <div id="bathroom" class="container" style="display: none;">
       <h2>Bathroom</h2>
       <button onclick="toggleDevice('bathroomLight')">Toggle Light</button>
-      <p>Temperature: <span id="bathroomTemp">0</span>C</p>
-      <div class="humidity-container">
-        <p class="humidity-text">Humidity: <span id="bathroomHumidity">0</span>%</p>
-        <div class="humidity-bar">
-          <div class="humidity-bar-inner" id="bathroomHumidityBar"></div>
-        </div>
-      </div>
+      <p>Motion Detected: <span id="motionStatus">No</span></p>
     </div>
     <div id="bedroom" class="container" style="display: none;">
       <h2>Bedroom</h2>
       <button onclick="toggleDevice('bedroomLight')">Toggle Light</button>
       <button onclick="toggleDevice('bedroomSwitch')">Toggle Switch</button>
     </div>
+
   </div>
+
   <script>
     function toggleDevice(device) {
       var xhttp = new XMLHttpRequest();
@@ -177,10 +192,7 @@
           document.getElementById('kitchenTemp').innerText = status.kitchenTemp;
           document.getElementById('kitchenHumidity').innerText = status.kitchenHumidity;
           document.getElementById('kitchenHumidityBar').style.width = status.kitchenHumidity + '%';
-          document.getElementById('bathroomTemp').innerText = status.bathroomTemp;
-          document.getElementById('bathroomHumidity').innerText = status.bathroomHumidity;
-          document.getElementById('bathroomHumidityBar').style.width = status.bathroomHumidity + '%';
-          document.getElementById('fireStatus').innerText = status.fireDetected ? 'Yes' : 'No';
+          document.getElementById('motionStatus').innerText = status.motionDetected ? 'Yes' : 'No';
         }
       };
       xhttp.open('GET', '/status', true);
@@ -188,7 +200,7 @@
     }
 
     function showRoom(room) {
-      var rooms = ['kitchen', 'hall', 'bathroom', 'bedroom'];
+      var rooms = ['home','detail','kitchen', 'hall', 'bathroom', 'bedroom'];
       rooms.forEach(function(r) {
         document.getElementById(r).style.display = 'none';
       });
