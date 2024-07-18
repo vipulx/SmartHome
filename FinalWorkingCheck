@@ -12,7 +12,6 @@ WebServer server(80);
 
 // Pin definitions
 const int DHTPin1 = 15; // DHT11 in kitchen
-const int DHTPin2 = 4;  // DHT11 in bathroom
 const int kitchenLightPin = 16;
 const int exhaustFanPin = 17;
 const int hallLightPin = 18;
@@ -20,9 +19,11 @@ const int tvPin = 19;
 const int bathroomLightPin = 21;
 const int bedroomLightPin = 22;
 const int bedroomSwitchPin = 23;
+const int pirSensorPin = 25; // PIR sensor pin for bathroom motion detection
 
 DHT dht1(DHTPin1, DHTTYPE);
-DHT dht2(DHTPin2, DHTTYPE);
+
+bool motionDetected = false;
 
 void setup() {
   Serial.begin(115200);
@@ -34,9 +35,9 @@ void setup() {
   pinMode(bathroomLightPin, OUTPUT);
   pinMode(bedroomLightPin, OUTPUT);
   pinMode(bedroomSwitchPin, OUTPUT);
+  pinMode(pirSensorPin, INPUT);
 
   dht1.begin();
-  dht2.begin();
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi.");
@@ -56,18 +57,24 @@ void setup() {
 
 void loop() {
   server.handleClient();
+
+  // Check PIR sensor for motion
+  if (digitalRead(pirSensorPin) == HIGH) {
+    motionDetected = true;
+  } else {
+    motionDetected = false;
+  }
 }
 
 void handleRoot() {
-String html ="<!DOCTYPE html> <html> <head> <title>Smart Home Dashboard</title> <style> body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; } h1 { text-align: center; margin-top: 20px; } .container { background-color: #fff; border: 1px solid #ddd; border-radius: 5px; margin: 20px auto; padding: 20px; max-width: 600px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); } h2 { margin-top: 0; } button { display: inline-block; padding: 10px 20px; margin: 5px 0; border: none; border-radius: 5px; background-color: #007bff; color: #fff; cursor: pointer; font-size: 16px; } button:hover { background-color: #0056b3; } </style> </head> <body> <h1>Smart Home Dashboard</h1> <div class=\"container\"> <h2>Kitchen</h2> <button onclick=\"toggleDevice('kitchenLight')\">Toggle Light</button> <button onclick=\"toggleDevice('exhaustFan')\">Toggle Exhaust Fan</button> <p>Temperature: <span id=\"kitchenTemp\">0</span>°C</p> <p>Humidity: <span id=\"kitchenHumidity\">0</span>%</p> </div> <div class=\"container\"> <h2>Hall</h2> <button onclick=\"toggleDevice('hallLight')\">Toggle Light</button> <button onclick=\"toggleDevice('tv')\">Toggle TV</button> </div> <div class=\"container\"> <h2>Bathroom</h2> <button onclick=\"toggleDevice('bathroomLight')\">Toggle Light</button> <p>Temperature: <span id=\"bathroomTemp\">0</span>°C</p> <p>Humidity: <span id=\"bathroomHumidity\">0</span>%</p> </div> <div class=\"container\"> <h2>Bedroom</h2> <button onclick=\"toggleDevice('bedroomLight')\">Toggle Light</button> <button onclick=\"toggleDevice('bedroomSwitch')\">Toggle Switch</button> </div> <script> function toggleDevice(device) { var xhttp = new XMLHttpRequest(); xhttp.open('GET', '/toggle?device=' + device, true); xhttp.send(); } function fetchStatus() { var xhttp = new XMLHttpRequest(); xhttp.onreadystatechange = function() { if (this.readyState == 4 && this.status == 200) { var status = JSON.parse(this.responseText); document.getElementById('kitchenTemp').innerText = status.kitchenTemp; document.getElementById('kitchenHumidity').innerText = status.kitchenHumidity; document.getElementById('bathroomTemp').innerText = status.bathroomTemp; document.getElementById('bathroomHumidity').innerText = status.bathroomHumidity; } }; xhttp.open('GET', '/status', true); xhttp.send(); } setInterval(fetchStatus, 5000); </script> </body> </html>";
-
-
+  String html ="<!DOCTYPE html> <html> <head> <title>Smart Home Dashboard</title> <style> body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #2c3e50; color: #ecf0f1; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; } h1 { margin: 20px 0; font-size: 2.5em; color: #ecf0f1; text-shadow: 2px 2px 4px #000; text-align: center; } .sidebar { background-color: #34495e; width: 250px; padding: 20px; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; align-items: center; } .sidebar button { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; background-color: #1abc9c; color: #fff; cursor: pointer; font-size: 16px; text-align: center; box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.1); transition: background-color 0.3s, transform 0.3s; } .sidebar button:hover { background-color: #16a085; transform: translateY(-3px); } .main-content { flex-grow: 1; padding: 20px; overflow-y: auto; } .container { background: linear-gradient(145deg, #34495e, #2c3e50); border-radius: 15px; margin: 20px 0; padding: 30px; box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.4), -8px -8px 15px rgba(255, 255, 255, 0.1); transition: transform 0.3s; } .container:hover { transform: translateY(-5px); } h2 { margin-top: 0; color: #1abc9c; font-size: 1.8em; } .container button { display: inline-block; padding: 12px 25px; margin: 10px 0; border: none; border-radius: 30px; background-color: #1abc9c; color: #fff; cursor: pointer; font-size: 16px; box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.1); transition: background-color 0.3s, transform 0.3s; } .container button:hover { background-color: #16a085; transform: translateY(-3px); } .humidity-container { display: flex; align-items: center; margin-top: 20px; } .humidity-bar { flex-grow: 1; height: 25px; background-color: #34495e; border-radius: 12.5px; overflow: hidden; margin-left: 20px; position: relative; box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.4), inset -4px -4px 10px rgba(255, 255, 255, 0.1); } .humidity-bar-inner { height: 100%; background-color: #3498db; width: 0; transition: width 0.3s ease; border-radius: 12.5px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); } .humidity-text { font-weight: bold; font-size: 1.2em; color: #ecf0f1; } p { margin: 10px 0; } </style> </head> <body> <div class=\"sidebar\"> <h1>Rooms</h1> <button onclick=\"showRoom('home')\">HOME</button> <button onclick=\"showRoom('kitchen')\">Kitchen</button> <button onclick=\"showRoom('hall')\">Hall</button> <button onclick=\"showRoom('bathroom')\">Bathroom</button> <button onclick=\"showRoom('bedroom')\">Bedroom</button> </div> <div class=\"main-content\"> <div id=\"home\" class=\"container\" style=\"display: none;\"> <h2>Home</h2> <button onclick=\"toggleDevice('bedroomLight')\">Bedroom Light</button> <button onclick=\"toggleDevice('bedroomSwitch')\">Bedroom Switch</button> <button onclick=\"toggleDevice('bathroomLight')\">Bathroom Light</button> <button onclick=\"toggleDevice('hallLight')\">Hall Light</button> <button onclick=\"toggleDevice('tv')\">TV</button> <button onclick=\"toggleDevice('kitchenLight')\">Kitchen Light</button> <button onclick=\"toggleDevice('exhaustFan')\">Exhaust Fan</button> </div> <div id=\"kitchen\" class=\"container\"> <h2>Kitchen</h2> <button onclick=\"toggleDevice('kitchenLight')\">Toggle Light</button> <button onclick=\"toggleDevice('exhaustFan')\">Toggle Exhaust Fan</button> <p>Temperature: <span id=\"kitchenTemp\">0</span>C</p> <div class=\"humidity-container\"> <p class=\"humidity-text\">Humidity: <span id=\"kitchenHumidity\">0</span>%</p> <div class=\"humidity-bar\"> <div class=\"humidity-bar-inner\" id=\"kitchenHumidityBar\"></div> </div> </div> <p>Fire Detected: <span id=\"fireStatus\">No</span></p> </div> <div id=\"hall\" class=\"container\" style=\"display: none;\"> <h2>Hall</h2> <button onclick=\"toggleDevice('hallLight')\">Toggle Light</button> <button onclick=\"toggleDevice('tv')\">Toggle TV</button> </div> <div id=\"bathroom\" class=\"container\" style=\"display: none;\"> <h2>Bathroom</h2> <button onclick=\"toggleDevice('bathroomLight')\">Toggle Light</button> <p>Motion Detected: <span id=\"motionStatus\">No</span></p> </div> <div id=\"bedroom\" class=\"container\" style=\"display: none;\"> <h2>Bedroom</h2> <button onclick=\"toggleDevice('bedroomLight')\">Toggle Light</button> <button onclick=\"toggleDevice('bedroomSwitch')\">Toggle Switch</button> </div> </div> <script> function toggleDevice(device) { var xhttp = new XMLHttpRequest(); xhttp.open('GET', '/toggle?device=' + device, true); xhttp.send(); } function fetchStatus() { var xhttp = new XMLHttpRequest(); xhttp.onreadystatechange = function() { if (this.readyState == 4 && this.status == 200) { var status = JSON.parse(this.responseText); document.getElementById('kitchenTemp').innerText = status.kitchenTemp; document.getElementById('kitchenHumidity').innerText = status.kitchenHumidity; document.getElementById('kitchenHumidityBar').style.width = status.kitchenHumidity + '%'; document.getElementById('motionStatus').innerText = status.motionDetected ? 'Yes' : 'No'; } }; xhttp.open('GET', '/status', true); xhttp.send(); } function showRoom(room) { var rooms = ['home','kitchen', 'hall', 'bathroom', 'bedroom']; rooms.forEach(function(r) { document.getElementById(r).style.display = 'none'; }); document.getElementById(room).style.display = 'block'; } setInterval(fetchStatus, 5000); </script> </body> </html>";
 
   server.send(200, "text/html", html);
 }
 
 void handleToggle() {
   String device = server.arg("device");
+
   if (device == "kitchenLight") {
     digitalWrite(kitchenLightPin, !digitalRead(kitchenLightPin));
   } else if (device == "exhaustFan") {
@@ -83,18 +90,17 @@ void handleToggle() {
   } else if (device == "bedroomSwitch") {
     digitalWrite(bedroomSwitchPin, !digitalRead(bedroomSwitchPin));
   }
-  server.send(200, "text/plain", "OK");
+
+  String json = "{\"success\":true}";
+  server.send(200, "application/json", json);
 }
 
 void handleStatus() {
-  String json = "{";
-  json += "\"kitchenLight\":" + String(digitalRead(kitchenLightPin)) + ",";
-  json += "\"exhaustFan\":" + String(digitalRead(exhaustFanPin)) + ",";
-  json += "\"hallLight\":" + String(digitalRead(hallLightPin)) + ",";
-  json += "\"tv\":" + String(digitalRead(tvPin)) + ",";
-  json += "\"bathroomLight\":" + String(digitalRead(bathroomLightPin)) + ",";
-  json += "\"bedroomLight\":" + String(digitalRead(bedroomLightPin)) + ",";
-  json += "\"bedroomSwitch\":" + String(digitalRead(bedroomSwitchPin));
-  json += "}";
+  float kitchenTemp = dht1.readTemperature();
+  float kitchenHumidity = dht1.readHumidity();
+  
+  bool motionStatus = motionDetected;
+
+  String json = "{\"kitchenTemp\":" + String(kitchenTemp) + ",\"kitchenHumidity\":" + String(kitchenHumidity) + ",\"motionDetected\":" + String(motionStatus ? "true" : "false") + "}";
   server.send(200, "application/json", json);
 }
