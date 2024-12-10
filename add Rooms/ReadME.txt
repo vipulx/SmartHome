@@ -21,12 +21,6 @@ const int newRoomLightPin = 27;
 
 
 
-Initialize New Sensors:
-    Create instances of new sensors and devices using appropriate libraries (e.g., DHT for temperature/humidity sensors).
-cpp -----------------------------------------------------------------
-DHT dht2(DHTPin2, DHTTYPE);  // Initialize a new DHT sensor instance
----------------------------------------------------------------------
-
     Initialize pins for output (devices you can control) and input (sensors detecting events like motion).
 cpp ----------------------------------------------------------------
 pinMode(newRoomLightPin, OUTPUT);
@@ -41,6 +35,12 @@ Modify the HTML structure to include UI elements for the new rooms and their res
 html ----------------------------------------------
 <button onclick="showRoom('newRoom')">New Room</button>
 -----------------------------------------------------------
+
+Initialize New Sensors:
+    Create instances of new sensors and devices using appropriate libraries (e.g., DHT for temperature/humidity sensors).
+cpp -----------------------------------------------------------------
+DHT dht2(DHTPin2, DHTTYPE);  // Initialize a new DHT sensor instance
+---------------------------------------------------------------------
 
 
 Add new <div> sections for each room in the handleRoot function to show controls and status for the new sensors/devices.
